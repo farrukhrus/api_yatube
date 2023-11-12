@@ -139,6 +139,7 @@ class TestPostAPI:
         )
 
     def test_post_get_current(self, user_client, post):
+        print('******************', post.id)
         response = user_client.get(f'/api/v1/posts/{post.id}/')
 
         assert response.status_code == HTTPStatus.OK, (
