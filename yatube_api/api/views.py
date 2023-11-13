@@ -1,18 +1,11 @@
-# from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from django.shortcuts import get_object_or_404
 
 from posts.models import Post, Group, Comment
 from .serializers import PostSerializer, GroupSerializer, CommentSerializer
-
-
-class IsAuthor(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or obj.author == request.user)
+from .permissions import IsAuthor
 
 
 @permission_classes([IsAuthenticated, IsAuthor])
@@ -34,14 +27,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
-    def get_id(self):
-        print('*******************', self.kwargs)
-        return get_object_or_404(Post, pk=self.kwargs.get('id'))
+    def get_post_id(self):
+        return get_object_or_404(Post, pk=self.kwargs.get('post_id'))
 
     def get_queryset(self):
-        return Comment.objects.filter(post=self.get_id())
+        return self.get_post_id().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            post=self.get_id())
+            post=self.get_post_id())
